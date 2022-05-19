@@ -1,9 +1,8 @@
 const router = require("express").Router();
 const verify = require("../middleware/verifyToken");
-const { createRating, updateRating, deleteRating } = require("../controllers/RatingController");
+const { createRating, showUserRating } = require("../controllers/RatingController");
 
+router.get("/:recipeId", verify, showUserRating);
 router.post("/", verify, createRating);
-router.patch("/:ratingId", verify, updateRating);
-router.delete("/:ratingId/:recipeId", verify, deleteRating);
 
 module.exports = router;

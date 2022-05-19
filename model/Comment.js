@@ -6,8 +6,16 @@ const commentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  title: String,
-  text: String,
+  title: {
+    type: String,
+    required: true,
+    minLength: 1,
+  },
+  text: {
+    type: String,
+    required: true,
+    minLength: 1,
+  },
   created_at: {
     type: Date,
     default: Date.now,

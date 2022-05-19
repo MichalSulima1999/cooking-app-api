@@ -10,7 +10,7 @@ const recipeSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
-    minLength: 0,
+    minLength: 20,
   },
   image_path: {
     type: String,

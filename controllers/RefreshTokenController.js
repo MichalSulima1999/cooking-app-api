@@ -3,11 +3,9 @@ const jwt = require('jsonwebtoken');
 
 const handleRefreshToken = async (req, res) => {
     const cookies = req.cookies;
-    console.log(cookies);
     if (!cookies?.jwt) return res.sendStatus(401);
-    //console.log(cookies.jwt);
     const refreshToken = cookies.jwt;
-    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+    //res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
 
     const foundUser = await User.findOne({ refreshToken: refreshToken }).exec();
     //console.log(foundUser);
@@ -18,7 +16,7 @@ const handleRefreshToken = async (req, res) => {
     jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET,
-        async (err, decoded) => {
+        (err, decoded) => {
             if (err || String(foundUser._id) !== decoded._id) return res.sendStatus(403);
             const accessToken = jwt.sign(
                 { _id: decoded._id },
@@ -26,14 +24,14 @@ const handleRefreshToken = async (req, res) => {
                 { expiresIn: '15m' }
             );
 
-            const newRefreshToken = jwt.sign(
-                { _id: foundUser._id },
-                process.env.REFRESH_TOKEN_SECRET,
-                { expiresIn: '7d' }
-            );
-            foundUser.refreshToken = newRefreshToken;
-            await foundUser.save();
-            res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
+            // const newRefreshToken = jwt.sign(
+            //     { _id: foundUser._id },
+            //     process.env.REFRESH_TOKEN_SECRET,
+            //     { expiresIn: '7d' }
+            // );
+            //foundUser.refreshToken = newRefreshToken;
+            //await foundUser.save();
+            //res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'None', maxAge: 24 * 60 * 60 * 1000 });
             res.json({ accessToken })
         }
     );

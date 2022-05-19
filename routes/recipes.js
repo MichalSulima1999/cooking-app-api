@@ -9,7 +9,9 @@ const {
   createRecipe,
   updateRecipe,
   deleteRecipe,
-  ratingMean
+  ratingMean,
+  showRecipesByMeal,
+  showRecipesByName
 } = require("../controllers/RecipeController");
 //const upload = multer({ dest: './public/data/images/' })
 
@@ -25,10 +27,13 @@ const upload = multer({ storage: storage });
 
 router.get("/", showRecipes);
 router.get("/random/:number", showRandomRecipes);
+router.get("/findByName/:name", showRecipesByName);
+router.get("/findByMeal/:meal", showRecipesByMeal);
 router.get("/ratingMean/:recipeId", ratingMean);
 router.get("/:recipeId", showRecipe);
+router.get("/verify/:recipeId", verify, showRecipe);
 router.post("/", verify, upload.single('img'), createRecipe);
-router.patch("/:recipeId", verify, updateRecipe);
+router.patch("/:recipeId", verify, upload.single('img'), updateRecipe);
 router.delete("/:recipeId", verify, deleteRecipe);
 
 module.exports = router;

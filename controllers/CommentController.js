@@ -44,25 +44,21 @@ const deleteComment = async (req, res) => {
     }
     if (doc.user == req.user._id) {
       doc.delete();
-      res.json(doc);
     } else {
       res.send("Authorization failed");
     }
   });
 
   try {
-    /*const deletedComment = await Comment.deleteOne({
-      _id: req.params.commentId,
-    });*/
     await Recipe.findOneAndUpdate(
       { _id: req.params.recipeId },
       { $pull: { comments: req.params.commentId } }
     );
-    //res.send(deletedComment);
   } catch (err) {
     res.json({ message: err });
     console.log(err);
   }
+  res.send("Recipe deleted successfuly!");
 };
 
 module.exports = { createComment, updateComment, deleteComment };

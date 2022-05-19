@@ -1,9 +1,31 @@
 const Recipe = require("../model/Recipe");
 const Comment = require("../model/Comment");
+const fs = require("fs");
+const path = require("path");
 
 const showRecipes = async (req, res) => {
   try {
     const recipes = await Recipe.find();
+    res.json(recipes);
+  } catch (err) {
+    res.json({ message: err });
+  }
+};
+
+const showRecipesByMeal = async (req, res) => {
+  try {
+    const recipes = await Recipe.find({ meal: { $regex: req.params.meal, $options: "i" } });
+    res.json(recipes);
+  } catch (err) {
+    res.json({ message: err });
+  }
+};
+
+const showRecipesByName = async (req, res) => {
+  try {
+    const recipes = await Recipe.find({
+      name: { $regex: req.params.name, $options: "i" },
+    });
     res.json(recipes);
   } catch (err) {
     res.json({ message: err });
@@ -23,11 +45,21 @@ const showRandomRecipes = async (req, res) => {
 
 const showRecipe = async (req, res) => {
   try {
-    //const recipe = await Recipe.findById(req.params.recipeId);
     const recipe = await Recipe.findById(req.params.recipeId)
       .populate("comments")
-      .populate("user")
-      .populate("ratings");
+      .populate("user");
+
+    if (req.user && req.user._id == recipe.user._id) {
+      recipe.user.name = "You";
+    }
+
+    if (req.user) {
+      recipe["comments"].forEach((element) => {
+        if (element.user == req.user._id) {
+          element.__v = 1;
+        }
+      });
+    }
     res.json(recipe);
   } catch (err) {
     res.json({ message: err });
@@ -40,7 +72,7 @@ const createRecipe = async (req, res) => {
     description: req.body.description,
     image_path: req.file.filename,
     meal: req.body.meal,
-    ingredients: req.body.ingredients,
+    ingredients: JSON.parse(req.body.ingredients),
     user: req.user._id,
     cooking_time: req.body.cooking_time,
   });
@@ -60,11 +92,19 @@ const updateRecipe = async (req, res) => {
       res.json({ message: err });
     }
     if (doc.user == req.user._id) {
+      const p = path.join("./public", "data", "images", doc.image_path);
+      fs.unlink(p, (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        console.log("File removed");
+      });
       doc.name = req.body.name;
       doc.description = req.body.description;
-      doc.image_path = req.body.image_path;
+      doc.image_path = req.file.filename;
       doc.meal = req.body.meal;
-      doc.ingredients = req.body.ingredients;
+      doc.ingredients = JSON.parse(req.body.ingredients);
       doc.cooking_time = req.body.cooking_time;
       await doc.save();
       console.log(doc);
@@ -96,9 +136,6 @@ const deleteRecipe = async (req, res) => {
     comments["comments"].forEach(async (element) => {
       await Comment.deleteOne({ _id: String(element) });
     });
-    //const deletedRecipe = await Recipe.deleteOne({ _id: req.params.recipeId });
-
-    //res.json(deletedRecipe);
   } catch (err) {
     res.json({ message: err });
     console.log(err);
@@ -117,7 +154,7 @@ const ratingMean = async (req, res) => {
       mean += element.rating;
       i++;
     });
-    res.send(String(mean / i));
+    res.json({ avg: mean / i });
   } catch (err) {
     res.json({ message: err });
     console.log(err);
@@ -132,4 +169,6 @@ module.exports = {
   updateRecipe,
   deleteRecipe,
   ratingMean,
+  showRecipesByMeal,
+  showRecipesByName,
 };
