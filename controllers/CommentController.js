@@ -56,7 +56,6 @@ const deleteComment = async (req, res) => {
     );
   } catch (err) {
     res.json({ message: err });
-    console.log(err);
   }
   res.send("Recipe deleted successfuly!");
 };

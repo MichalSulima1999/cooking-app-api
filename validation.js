@@ -1,5 +1,6 @@
 // VALIDATION
 const Joi = require("@hapi/joi");
+const { join } = require("path");
 
 // Register Validation
 const registerValidation = data => {
@@ -22,5 +23,18 @@ const loginValidation = data => {
       return schema.validate(data);
 };
 
+const recipeValidation = data => {
+  const schema = Joi.object({
+    name: Joi.string().min(4).max(32).required(),
+    description: Joi.string().min(20).required(),
+    meal: Joi.string().valid(...["Breakfast", "Dinner", "Supper", "Dessert"]),
+    ingredients: Joi.string().min(1).required(),
+    cooking_time: Joi.number().min(1).required(),
+  })
+
+  return schema.validate(data);
+};
+
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;
+module.exports.recipeValidation = recipeValidation;

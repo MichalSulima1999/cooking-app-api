@@ -53,7 +53,6 @@ const createRating = async (req, res) => {
       res.send(savedRating);
     }
   } catch (err) {
-    console.log(err);
     res.json({ message: err });
   }
 };

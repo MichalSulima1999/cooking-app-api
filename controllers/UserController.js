@@ -26,7 +26,7 @@ const registerUser = async (req, res) => {
     password: hashedPassword,
   });
   try {
-    const savedUser = await user.save();
+    await user.save();
 
     res.send({ user: user._id });
   } catch (err) {
@@ -43,11 +43,11 @@ const loginUser = async (req, res) => {
   var user = await User.findOne({ email: req.body.login }).select("+password");
   if (!user)
     user = await User.findOne({ name: req.body.login }).select("+password");
-  if (!user) return res.status(400).send("User not found");
+  if (!user) return res.status(400).send("Invalid username or password");
 
   // Password is correct
   const validPass = await bcrypt.compare(req.body.password, user.password);
-  if (!validPass) return res.status(400).send("Invalid password");
+  if (!validPass) return res.status(400).send("Invalid username or password");
 
   // Create and assign a token
   const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, {
@@ -59,13 +59,10 @@ const loginUser = async (req, res) => {
     { expiresIn: "7d" }
   );
 
-  //console.log(refreshToken);
-
   user.refreshToken = refreshToken;
   await user.save();
 
   const cookies = req.cookies;
-  console.log(cookies.jwt);
 
   res.cookie("jwt", refreshToken, {
     sameSite: "None",
@@ -90,8 +87,7 @@ const logoutUser = async (req, res) => {
 
   // Delete refreshToken in db
   foundUser.refreshToken = "";
-  const result = await foundUser.save();
-  console.log(result);
+  await foundUser.save();
 
   res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true }); //
   res.sendStatus(204);

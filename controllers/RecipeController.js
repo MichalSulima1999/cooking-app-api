@@ -1,5 +1,6 @@
 const Recipe = require("../model/Recipe");
 const Comment = require("../model/Comment");
+const { recipeValidation } = require("../validation");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,7 +15,9 @@ const showRecipes = async (req, res) => {
 
 const showRecipesByMeal = async (req, res) => {
   try {
-    const recipes = await Recipe.find({ meal: { $regex: req.params.meal, $options: "i" } });
+    const recipes = await Recipe.find({
+      meal: { $regex: req.params.meal, $options: "i" },
+    });
     res.json(recipes);
   } catch (err) {
     res.json({ message: err });
@@ -67,6 +70,11 @@ const showRecipe = async (req, res) => {
 };
 
 const createRecipe = async (req, res) => {
+  // Validate data
+  const { error } = recipeValidation(req.body);
+  console.log(error);
+  if (error) return res.status(400).send(error.details[0].message);
+
   const recipe = new Recipe({
     name: req.body.name,
     description: req.body.description,
@@ -82,11 +90,14 @@ const createRecipe = async (req, res) => {
     res.send(savedRecipe);
   } catch (err) {
     res.json({ message: err });
-    console.log(err);
   }
 };
 
 const updateRecipe = async (req, res) => {
+  // Validate data
+  const { error } = recipeValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+  
   Recipe.findById(req.params.recipeId, async function (err, doc) {
     if (err) {
       res.json({ message: err });
@@ -95,10 +106,8 @@ const updateRecipe = async (req, res) => {
       const p = path.join("./public", "data", "images", doc.image_path);
       fs.unlink(p, (err) => {
         if (err) {
-          console.error(err);
           return;
         }
-        console.log("File removed");
       });
       doc.name = req.body.name;
       doc.description = req.body.description;
@@ -107,7 +116,6 @@ const updateRecipe = async (req, res) => {
       doc.ingredients = JSON.parse(req.body.ingredients);
       doc.cooking_time = req.body.cooking_time;
       await doc.save();
-      console.log(doc);
       res.json(doc);
     } else {
       res.send("Authorization failed");
@@ -138,7 +146,6 @@ const deleteRecipe = async (req, res) => {
     });
   } catch (err) {
     res.json({ message: err });
-    console.log(err);
   }
 };
 
@@ -157,7 +164,6 @@ const ratingMean = async (req, res) => {
     res.json({ avg: mean / i });
   } catch (err) {
     res.json({ message: err });
-    console.log(err);
   }
 };
 

@@ -13,7 +13,6 @@ const {
   showRecipesByMeal,
   showRecipesByName
 } = require("../controllers/RecipeController");
-//const upload = multer({ dest: './public/data/images/' })
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -21,9 +20,27 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname)) //Appending extension
-  }
+  },
+  fileFilter: function(_req, file, cb){
+    checkFileType(file, cb);
+}
 })
 const upload = multer({ storage: storage });
+
+function checkFileType(file, cb){
+  // Allowed ext
+  const filetypes = /jpg|png|webp/;
+  // Check ext
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  // Check mime
+  const mimetype = filetypes.test(file.mimetype);
+
+  if(mimetype && extname){
+    return cb(null,true);
+  } else {
+    cb('Error: Images Only!');
+  }
+}
 
 router.get("/", showRecipes);
 router.get("/random/:number", showRandomRecipes);
